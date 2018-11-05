@@ -1,0 +1,115 @@
+# VSTS Continuous integration selenium Configuration
+
+## Azure VM Configuration Details
+- IP address : 52.151.73.46
+- UserName : TestVM
+- Password : Password@123
+
+Ref URL : http://donovanbrown.com/post/2015-ignite-new-zealand-demo-prep-step-2 
+
+## Agent configuration Details in VM
+Remote Machine: C:\Agent1 
+
+Steps To create a new agent in VM
+### Download Agent from VSO 
+- Open Internet Explorer
+- Navigate to your VSO account
+- Click the Administer Account gear in the upper right hand corner of the screen
+- Select Control panel
+- Click Agent pools tab
+- Click the Download agent link
+- Save the file to your Downloads folder
+- Right-click agent.zip
+- Select Properties
+- Ensure the file is unblocked
+### Extract the file to Agent1 folder 
+- Right-click agent.zip
+- Select Extract All
+- Enter C:\Agent1
+- Click Extract
+### Run ConfigureAgent.cmd in elevated command prompt 
+- Press the Windows key
+- Type CMD
+- Right-click Command Prompt
+- Select Run as administrator
+- Navigate to the folder where you extracted the file contents
+- Run ConfigureAgent.cmd
+- You can either use the default name or have the name match the folder name, which in my case is Agent1
+- Now enter your Visual Studio Online URL
+- Enter the agent pool to which you would like to add this agent. 
+- Every Visual Studio Online account is created with two Agent Pools: Default and Hosted.  You are free, however, to create additional agent pools from the page where you downloaded the agent. 
+- Accept the default working folder 
+- You have a choice to decide where you would like the agent to store the files it will be working with during builds and releases. 
+- Answer N 
+- Because we are going to be running Selenium tests we will want to run the agent in interactive mode. 
+- Sign in to your Visual Studio Online account 
+
+### Set up Agent in Interactive Mode
+- Enable automatic log in 
+- Open the Run dialog 
+- Press Windows Key + R
+- Type “control userpasswords2”
+- Press enter
+- Uncheck the box for “User must enter a user name and password to use this computer.”
+- Click the Apply button
+- Enter the password for the user
+- Click OK
+- Click OK on the Users Accounts dialog
+Now, every time your machine is rebooted the configured user will automatically log in to the machine. 
+
+## Verify Agent is running in VM
+Open command prompt in adminstrator  mode  Enter command c:\Agent1>run --startuptype autostartup
+
+Ref: http://chamindac.blogspot.co.uk/2017/12/running-ui-tests-with-unified-agent.html
+ ![image.png](.attachments/image-614f4c59-b254-410d-86cf-b4205a9c6d75.png)
+
+
+## VSTS Agent Pool Details
+### - Agents for pool Selenium AzureVM - Selenium Azure VM
+
+ ![image.png](.attachments/image-4ef2b302-dc60-4d33-bf5b-098af834492e.png)
+
+### PAT Token Used to create this  agent- uq4sye7ucq76vfznbe6jwoheslij72qz3ngqafxls444i3dl4iaq 
+
+## Create a New  Build Definition
+### - Select Agent queue as Selenium Azure VM
+
+ ![image.png](.attachments/image-43911f1d-3a50-44d0-a8c3-361d1197742f.png)
+
+### Build Solution
+ ![image.png](.attachments/image-b8c9d88b-e6b4-486a-bdc0-ee84fee1c774.png)
+
+### - Configure VS Test Assemblies 
+ ![image.png](.attachments/image-04bc4811-a939-40ce-a109-aa58f6ed9d3e.png)
+
+### Publish Build Artifacts 
+
+ ![image.png](.attachments/image-626ffe77-445a-42d3-ae8e-29eb62b5277d.png)
+
+## Trigger Regression Build Every night
+ ![image.png](.attachments/image-7ec98bef-211a-4b05-8f62-1e680a3e564f.png)
+
+## Trigger Continuous Integration
+
+ ![image.png](.attachments/image-4adf6c3c-8a54-4754-a9c4-ebeeca0055d9.png)
+
+## Test Results
+
+We can see Test reults in tests section and we can filter it 
+
+ ![image.png](.attachments/image-9bd60b3e-7fbc-4b0c-9c92-4012282f5283.png)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
