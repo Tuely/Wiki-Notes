@@ -1,0 +1,304 @@
+Create a solution (nunit project or unit test project)
+NugetPackage
+Specflow
+Specflow.nunit
+Specflow.tools.msbuildgeneration
+Selenium.webdriver
+Selenium.support
+Selenium.webdriver.chrome
+Donetseleniumextras.pageobjects
+
+Add Reference
+System.configuration
+
+Folder Structure
+Pages- basepage, pagefactory, homepage…
+Core ui- browserfactory, webdriversupport
+Common- appconfigmanger
+DataEntities- accountdetails
+Extension- webelementextension
+Scenarios
+Steps
+Hooks
+App.config
+
+App.config
+<?xml version="1.0" encoding="utf-8" ?>
+<configuration>
+  <appSettings>
+    <add key="BaseUrl" value="https://hugweb-g2irenewals-test.azurewebsites.net/quote/CarG2I"/>
+    <add key="ImplictWaitTime" value="60"/>
+    <add key="Browser" value="Chrome"/>
+  </appSettings>
+</configuration>
+
+Features
+Feature: Signup
+Background: 
+	Given Iam on the landing page 
+
+@mytag
+Scenario: New user registration
+	And I navigate into signup page
+	When I create a new account
+	| Title | Name |
+	| Mr    | Test |
+	Then I am logged into my account
+
+Common- AppConfigManager
+using System;
+using System.Configuration;
+
+namespace UnitTestProject18.Common
+{
+    public class AppConfigManager
+    {
+        public static string GetBaseUrl()
+        {
+            return ConfigurationManager.AppSettings["BaseUrl"];
+        }
+
+        public static string GetBrowser()
+        {
+            return ConfigurationManager.AppSettings["Browser"];
+        }
+
+        public static TimeSpan GetImplicitWaitTime()
+        {
+            return TimeSpan.FromSeconds(double.Parse(ConfigurationManager.AppSettings["ImplictWaitTime"]));
+        }
+    }
+}
+
+
+CoreUI- BrowserFactory
+
+using OpenQA.Selenium;
+using OpenQA.Selenium.Chrome;
+using OpenQA.Selenium.Firefox;
+using UnitTestProject18.Common;
+namespace UnitTestProject18.Core
+{
+   public class BrowserFactory
+    {
+        private static IWebDriver _driver;
+        private static TimeSpan _implictWait = AppConfigManag-er.GetImplicitWaitTime();
+
+        public static IWebDriver IntializeDriver(string browser)
+        {
+            switch (browser)
+            {
+                case "Chrome":
+                    _driver = new ChromeDriver();
+                    break;
+                case "Firefox":
+                    _driver = new FirefoxDriver();
+                    break;
+                default:
+                    _driver = new ChromeDriver();
+                    break;
+            }
+            _driver.Manage().Window.Maximize();
+            _driver.Manage().Timeouts().ImplicitWait = _implictWait;
+            return _driver;
+        }
+    }
+
+
+CoreUI- WebDriverSupport
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using OpenQA.Selenium;
+using OpenQA.Selenium.Support.UI;
+using UnitTestProject18.Common;
+namespace UnitTestProject18.Core
+{
+   public class WebDriverSupport
+    {
+        public static IWebDriver _driver;
+        public static IWebDriver SupportDriver()
+        {
+            return _driver;
+        }
+        
+        public static  void DisposeDriver()
+        {
+            _driver.Dispose();
+            _driver.Close();
+            _driver.Quit();
+
+        }
+        public static IWebDriver LaunchDriver()
+
+        {
+            _driver = BrowserFacto-ry.IntializeDriver(AppConfigManager.GetBrowser());
+            return _driver;
+        }
+
+        public void EnterTest(IWebElement e, string text)
+        {
+            e.Clear();
+            e.SendKeys(text);
+          }
+
+        public void SelectDropDown(IWebElement e, string text)
+        {
+            var selectValue = new SelectElement(e);
+            selectValue.SelectByText(text);
+
+        }
+    }
+}
+
+Extensions- WebElementExtension
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using OpenQA.Selenium;
+using OpenQA.Selenium.Support.UI;
+using UnitTestProject18.Core;
+namespace UnitTestProject18.Extensions
+{
+    public static class WebElementExtension
+    {
+        public static void ClickElement(this IWebElement e)
+        {
+            e.Click();
+        }
+
+        public static void  WaitUntilDisplayed(this IWebElement e)
+        {
+
+            var driver = WebDriverSupport.SupportDriver();
+            var isClickableWait = new WebDriverWait(driver, TimeSpan.FromSeconds(15));
+
+            isClickableWait.Until(ExpectedConditions.ElementToBeClickable(e));
+
+            e.Click();
+        }
+      }
+}
+
+
+Pages-BasePage
+
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using OpenQA.Selenium;
+using SeleniumExtras.PageObjects;
+using UnitTestProject18.Core;
+
+namespace UnitTestProject18.Pages
+{
+   public  class BasePage
+    {
+        private IWebDriver _driver;
+        public BasePage(IWebDriver driver)
+        {
+            _driver = driver;
+        }
+        public Tpage GetPage<Tpage>(IWebDriver driver) where Tpage : new()
+        {
+            if(_driver==null)
+            {
+                _driver = driver;
+            }
+            var pageInstance = new Tpage();
+            PageFactory.InitElements(driver, pageInstance);
+            return pageInstance;
+        }
+
+        public static void LaunchUrl(string url)
+        {
+            WebDriverSupport.SupportDriver().Navigate().GoToUrl(url);
+
+        }
+    }
+}
+
+
+
+
+Pages-PAgeObjectFactory
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using OpenQA.Selenium;
+
+namespace UnitTestProject18.Pages
+{
+   public class PageObjectFactory
+    {
+        private IWebDriver _driver;
+        private BasePage _basePage;
+        public PageObjectFactory(IWebDriver driver, BasePage basePage)
+        {
+            _driver = driver;
+            _basePage = basePage;
+        }
+
+        public HomePage HomePage()
+        {
+            return _basePage.GetPage<HomePage>(_driver);
+        }
+        public RegistrationPage RegistrationPage()
+        {
+            return _basePage.GetPage<RegistrationPage>(_driver);
+        }
+
+    }
+}
+
+
+Pages-HomePage
+
+using OpenQA.Selenium;
+using UnitTestProject18.Core;
+using SeleniumExtras.PageObjects;
+using UnitTestProject18.Extensions;
+
+namespace UnitTestProject18.Pages
+{
+   public class HomePage
+    {
+        #region HomePage
+        protected WebDriverSupport _driverSupport = new WebDriverSupport();
+        [FindsBy(How =How.XPath,Using = "//a[text() = 'LOG IN']")]
+        private IWebElement LoginButton { get; set; }
+
+        #endregion
+
+        #region PageActions
+        public void Login()
+        {
+            LoginButton.ClickElement();
+        }
+        #endregion
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
